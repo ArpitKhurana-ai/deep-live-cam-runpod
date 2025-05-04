@@ -19,7 +19,8 @@ pip install \
     torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 \
     onnxruntime-gpu==1.16.3 \
     realesrgan \
-    gfpgan
+    gfpgan \
+    gradio
 
 # Clone repo
 cd /deeplivecam
@@ -35,6 +36,6 @@ mkdir -p models
 wget -nc -O models/GFPGANv1.4.pth https://github.com/TencentARC/GFPGAN/releases/download/v1.3.8/GFPGANv1.4.pth
 wget -nc -O models/inswapper_128_fp16.onnx https://github.com/hacksider/Deep-Live-Cam/releases/download/v1.0/inswapper_128_fp16.onnx
 
-# Optional: auto-start face swap on video
-echo "🚀 Starting Deep-Live-Cam with CUDA acceleration..."
+# Launch Gradio interface
+echo "🚀 Launching Deep-Live-Cam with CUDA acceleration..."
 python run.py --execution-provider cuda
