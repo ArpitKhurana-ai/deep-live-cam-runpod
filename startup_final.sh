@@ -43,4 +43,4 @@ wget -nc -O models/inswapper_128_fp16.onnx https://github.com/hacksider/Deep-Liv
 
 # 8. Launch Deep-Live-Cam
 echo "🚀 Launching Deep-Live-Cam with CUDA acceleration..."
-python run.py --execution-provider cuda
+python run.py --execution-provider cuda --host 0.0.0.0 --port 7860
