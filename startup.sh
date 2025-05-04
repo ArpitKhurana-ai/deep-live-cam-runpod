@@ -1,62 +1,40 @@
 #!/bin/bash
 set -xe
 
-echo "🔧 Starting Deep-Live-Cam Setup..."
+echo "🔧 Setting up Deep-Live-Cam (GPU CUDA Mode)..."
 
-# 1. Install system dependencies
 apt-get update && apt-get install -y \
     libgl1 \
     wget \
     git \
-    ffmpeg
+    ffmpeg \
+    python3-pip
 
-# 2. Upgrade pip
 pip install --upgrade pip
 
-# 3. Install Python dependencies
 pip install \
-    gradio \
     opencv-python-headless \
     pillow \
     numpy \
-    ultralytics \
-    realesrgan
+    torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 \
+    onnxruntime-gpu==1.16.3 \
+    realesrgan \
+    gfpgan
 
-# 4. Install PyTorch (CUDA 11.8 compatible)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-
-# 5. Use correct volume mount path to isolate from ComfyUI
+# Clone repo
 cd /deeplivecam
-if [ ! -d "Deep-Live-Cam" ]; then
-    git clone https://github.com/hacksider/Deep-Live-Cam.git
-fi
+git clone https://github.com/hacksider/Deep-Live-Cam.git || true
 cd Deep-Live-Cam
 
-# 6. Download YOLOv8 and Real-ESRGAN models
-yolo task=detect mode=predict model=yolov8n.pt || echo "✅ YOLOv8 model already cached or skipped"
+# Download YOLOv8 model (optional)
+pip install ultralytics
+yolo task=detect mode=predict model=yolov8n.pt || echo "✅ YOLOv8 already cached"
 
-mkdir -p weights
-wget -nc -O weights/RealESRGAN_x4plus.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5/RealESRGAN_x4plus.pth
+# Download required face-swap models
+mkdir -p models
+wget -nc -O models/GFPGANv1.4.pth https://github.com/TencentARC/GFPGAN/releases/download/v1.3.8/GFPGANv1.4.pth
+wget -nc -O models/inswapper_128_fp16.onnx https://github.com/hacksider/Deep-Live-Cam/releases/download/v1.0/inswapper_128_fp16.onnx
 
-# 7. Patch inference.py to accept file input
-sed -i 's/def run_pipeline(source=0):/def run_pipeline(source):/' inference.py
-
-# 8. Launch Gradio UI
-echo "🚀 Launching Deep-Live-Cam..."
-
-cat > gradio_ui.py << 'EOF'
-import gradio as gr
-from inference import run_pipeline
-
-def process(video_file):
-    return run_pipeline(video_file.name)
-
-demo = gr.Interface(fn=process,
-                    inputs=gr.Video(label="Upload a video (no webcam on RunPod)"),
-                    outputs=gr.Video(label="Enhanced output"),
-                    title="Deep Live Cam (RunPod Edition)")
-
-demo.launch(share=True, server_port=7860)
-EOF
-
-python gradio_ui.py
+# Optional: auto-start face swap on video
+echo "🚀 Starting Deep-Live-Cam with CUDA acceleration..."
+python run.py --execution-provider cuda
