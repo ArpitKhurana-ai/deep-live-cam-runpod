@@ -39,10 +39,12 @@ yolo task=detect mode=predict model=yolov8n.pt || echo "✅ YOLOv8 model already
 mkdir -p weights
 wget -nc -O weights/RealESRGAN_x4plus.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5/RealESRGAN_x4plus.pth
 
-# 8. Launch the app with file upload fallback instead of webcam
+# 8. Patch inference.py to accept file path instead of webcam
+sed -i 's/def run_pipeline(source=0):/def run_pipeline(source):/' inference.py
+
+# 9. Launch the app with video upload instead of webcam
 echo "🚀 Launching Deep-Live-Cam..."
 
-# Replace app.py temporarily to use video upload instead of webcam
 cat > gradio_ui.py << 'EOF'
 import gradio as gr
 from inference import run_pipeline
