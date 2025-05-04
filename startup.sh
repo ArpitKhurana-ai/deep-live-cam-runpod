@@ -22,25 +22,26 @@ pip install \
     ultralytics \
     realesrgan
 
+# 4. Install PyTorch (CUDA 11.8 compatible)
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
-# 4. Use internal /workspace path (always exists)
-cd /workspace
+# 5. Use correct volume mount path to isolate from ComfyUI
+cd /deeplivecam
 if [ ! -d "Deep-Live-Cam" ]; then
     git clone https://github.com/hacksider/Deep-Live-Cam.git
 fi
 cd Deep-Live-Cam
 
-# 5. Download YOLOv8 and Real-ESRGAN model
+# 6. Download YOLOv8 and Real-ESRGAN models
 yolo task=detect mode=predict model=yolov8n.pt || echo "✅ YOLOv8 model already cached or skipped"
 
 mkdir -p weights
 wget -nc -O weights/RealESRGAN_x4plus.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5/RealESRGAN_x4plus.pth
 
-# 6. Patch for file input
+# 7. Patch inference.py to accept file input
 sed -i 's/def run_pipeline(source=0):/def run_pipeline(source):/' inference.py
 
-# 7. Launch Gradio UI
+# 8. Launch Gradio UI
 echo "🚀 Launching Deep-Live-Cam..."
 
 cat > gradio_ui.py << 'EOF'
